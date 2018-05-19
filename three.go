@@ -1,14 +1,39 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+	"math/rand"
+)
 
 func main() {
-	balance:=80
-	b:=NewBank(NewSimepleAccount(uint8(balance)))
-	fmt.Println("初始化余额", b.Balance())
-	b.Withdraw(uint8(30),"baby")
+	/*单卡
+	 */
+	//balance:=80
+	//b:=NewBank(NewSimepleAccount(uint8(balance)))
+	//fmt.Println("初始化余额", b.Balance())
+	//b.Withdraw(uint8(30),"baby")
+	//fmt.Println("剩余余额", b.Balance())
 
-	fmt.Println("剩余余额", b.Balance())
+	/*
+	多卡情况
+	 */
+	 balance:=80
+	 b:=NewBank(NewSimepleAccount(uint8(balance)))
+	fmt.Println("初始化余额", b.Balance())
+	 donechan:=make(chan bool)
+	 go func() {
+	 	b.Withdraw(uint8(30),"daughter")
+	 	donechan<-true
+	 }()
+	 go func() {
+	 	b.Withdraw(uint8(10),"son")
+	 	donechan<-true
+	 }()
+	 <-donechan
+	 <-donechan
+	 fmt.Println("________________")
+	 fmt.Println("剩余钱",b.Balance())
 }
 
 type Account interface {
@@ -42,7 +67,11 @@ func NewSimepleAccount(balance uint8)*SimepleAccount  {
 	return &SimepleAccount{balance:balance}
 }
 func (account *SimepleAccount)setBalance(balance uint8)  {
+	account.add_some_latency()
 	account.balance=balance
+}
+func (account *SimepleAccount) add_some_latency() {
+	<-time.After(time.Duration(rand.Intn(100)) * time.Millisecond)
 }
 func (account *SimepleAccount)Deposit(amount uint8)  {
 	account.setBalance(account.balance+amount)
